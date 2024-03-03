@@ -8,7 +8,6 @@ function App() {
     input2: ''
   });
 
-
   const [percentage, setPercentage] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -21,10 +20,8 @@ function App() {
         input2: ''
       });
 
-
-      if(response){
-        setPercentage(response.data);
-      }
+      // Assuming response.data contains the percentage value
+      setPercentage(response.data.result); // Set the percentage state with the result value
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -45,7 +42,7 @@ function App() {
         <input className='input2' type="text" name="input2" value={formData.input2} onChange={handleChange} placeholder="Enter value for input 2" />
         <button type="submit">Submit</button>
       </form>
-      {percentage && <div className='result'>{percentage}</div>}
+      {percentage !== null && <div className='result'>{percentage} %</div>} {/* Render the percentage if it's not null */}
     </div>
   );
 }

@@ -19,10 +19,12 @@ def skipGram():
         
         model_instance = Model(data['input1'], data['input2'])
 
-        print(f'result:{model_instance.cosine_similarity_scratch()}')
-
         result = model_instance.cosine_similarity_scratch()
-        return result
+
+        # print(f'result:{model_instance.cosine_similarity_scratch()}')
+
+        result_json = {'result': result.item()}
+        return jsonify(result_json)
     except KeyError as e:
         return jsonify({'error': f"KeyError: {str(e)}"}), 404
     except Exception as e:

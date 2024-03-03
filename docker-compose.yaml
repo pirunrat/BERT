@@ -1,0 +1,38 @@
+version: '3'
+services:
+  frontend:
+    command: ["npm", "start"]
+    image: frontend-nlp-a2:v1.0
+    build:
+      context: .
+      dockerfile: Dockerfile.react
+    environment:
+      - HOST=0.0.0.0
+      - PORT=80
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/root/frontend
+      - ./.vscode-server:/root/.vscode-server
+    networks:
+      - app-network  # Add this line
+
+  backend:
+    command: ["python", "app.py"]
+    image: backend-nlp-a2:v1.0
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    environment:
+      - HOST=0.0.0.0
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./Backend:/root/backend
+      - ./.vscode-server:/root/.vscode-server
+    networks:
+      - app-network  # Add this line
+
+networks:
+  app-network:  # Define a network for the services

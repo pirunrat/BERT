@@ -202,57 +202,66 @@ def preprocess_text(raw_text):
 
 
 def make_batch(sent, batch_size, max_mask, max_len):
-    token_list, word2id, id2word, vocab_size = preprocess_text(" ".join(sent))
+    # _,word2id, id2word, vocab_size = preprocess_text(sent)
+    # print(f"word2id:{word2id}")
 
     #print(f'batch size:{batch_size}')
 
+    print(f'token_list length:{len(token_list)}')
+    # print(f'token_list:{token_list}')
+
     batch = []
-    positive = negative = 0
+    # positive = negative = 0
 
-    while positive != batch_size // 2 or negative != batch_size // 2:
-        tokens_a_index, tokens_b_index = randrange(len(token_list)), randrange(len(token_list))
-        # print(f'tokens_a_index:{tokens_a_index}')
-        # print(f'tokens_b_index:{tokens_b_index}')
-        tokens_a, tokens_b = token_list[tokens_a_index], token_list[tokens_b_index]
+    # while positive != batch_size / 2 or negative != batch_size / 2:
+    # print(f'negative:{negative}')
+    # print(f'positive:{positive}')
+    # print(f'batch_size:{batch_size}')
+    tokens_a_index, tokens_b_index = randrange(len(token_list)-1), randrange(len(token_list)-1)
+    # print(f'tokens_a_index:{tokens_a_index}')
+    # print(f'tokens_b_index:{tokens_b_index}')
+    tokens_a, tokens_b = token_list[tokens_a_index], token_list[tokens_b_index]
 
-        input_ids = [word2id['[CLS]']] + tokens_a + [word2id['[SEP]']] + tokens_b + [word2id['[SEP]']]
-        segment_ids = [0] * (1 + len(tokens_a) + 1) + [1] * (len(tokens_b) + 1)
+    input_ids = [word2id['[CLS]']] + tokens_a + [word2id['[SEP]']] + tokens_b + [word2id['[SEP]']]
+    segment_ids = [0] * (1 + len(tokens_a) + 1) + [1] * (len(tokens_b) + 1)
 
-        n_pred = min(max_mask, max(1, int(round(len(input_ids) * 0.15))))
-        candidates_masked_pos = [i for i, token in enumerate(input_ids) if token != word2id['[CLS]'] and token != word2id['[SEP]']]
-        shuffle(candidates_masked_pos)
-        masked_tokens, masked_pos = [], []
+    n_pred = min(max_mask, max(1, int(round(len(input_ids) * 0.15))))
+    candidates_masked_pos = [i for i, token in enumerate(input_ids) if token != word2id['[CLS]'] and token != word2id['[SEP]']]
+    shuffle(candidates_masked_pos)
+    masked_tokens, masked_pos = [], []
 
-        # print('here')
+    # print('here')
 
-        for pos in candidates_masked_pos[:n_pred]:
-            # print('for')
-            masked_pos.append(pos)
-            masked_tokens.append(input_ids[pos])
-            if random() < 0.1:
-                index = randint(0, vocab_size - 1)
-                input_ids[pos] = word2id[id2word[index]]
-            elif random() < 0.8:
-                input_ids[pos] = word2id['[MASK]']
-            else:
-                pass
+    for pos in candidates_masked_pos[:n_pred]:
+        # print('for')
+        masked_pos.append(pos)
+        masked_tokens.append(input_ids[pos])
+        if random() < 0.1:
+            index = randint(0, vocab_size - 1)
+            input_ids[pos] = word2id[id2word[index]]
+        elif random() < 0.8:
+            input_ids[pos] = word2id['[MASK]']
+        else:
+            pass
 
-        n_pad = max_len - len(input_ids)
-        input_ids.extend([0] * n_pad)
-        segment_ids.extend([0] * n_pad)
+    n_pad = max_len - len(input_ids)
+    input_ids.extend([0] * n_pad)
+    segment_ids.extend([0] * n_pad)
 
-        if max_mask > n_pred:
-            n_pad = max_mask - n_pred
-            masked_tokens.extend([0] * n_pad)
-            masked_pos.extend([0] * n_pad)
+    if max_mask > n_pred:
+        n_pad = max_mask - n_pred
+        masked_tokens.extend([0] * n_pad)
+        masked_pos.extend([0] * n_pad)
 
-        if tokens_a_index + 1 == tokens_b_index and positive < batch_size / 2:
-            batch.append([input_ids, segment_ids, masked_tokens, masked_pos, True])
-            positive += 1
-        elif tokens_a_index + 1 != tokens_b_index and negative < batch_size / 2:
-            batch.append([input_ids, segment_ids, masked_tokens, masked_pos, False])
-            negative += 1
+    batch.append([input_ids, segment_ids, masked_tokens, masked_pos, True])
 
+    # if tokens_a_index + 1 == tokens_b_index and positive < batch_size / 2:
+    #     batch.append([input_ids, segment_ids, masked_tokens, masked_pos, True])
+    #     positive += 1
+    # elif tokens_a_index + 1 != tokens_b_index and negative < batch_size / 2:
+    #     batch.append([input_ids, segment_ids, masked_tokens, masked_pos, False])
+    #     negative += 1
+    print('Done')
     return batch
 
 
@@ -322,7 +331,9 @@ except FileNotFoundError as e:
 # print(f'finetuned_model:{finetuned_model}')
 
 
+# batch_a = make_batch('this is a dog', len('this is a cat'), max_mask, max_len)
 
+# print(f'batch_a:{batch_a}')
 
 
 class Model:
@@ -335,8 +346,8 @@ class Model:
         self.sentence_b = sentence_b
 
         print('before')
-        batch_a = make_batch(sentence_a, len(sentence_a), max_mask, max_len)
-        batch_b = make_batch(sentence_b, len(sentence_b), max_mask, max_len)
+        batch_a = make_batch(self.sentence_a, len(self.sentence_a), max_mask, max_len)
+        batch_b = make_batch(self.sentence_b, len(self.sentence_b), max_mask, max_len)
 
         input_ids_a, segment_ids_a, masked_tokens_a, masked_pos_a, isNext_a = map(torch.LongTensor, zip(*batch_a))
         input_ids_b, segment_ids_b, masked_tokens_b, masked_pos_b, isNext_b = map(torch.LongTensor, zip(*batch_b))
